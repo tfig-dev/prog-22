@@ -30,7 +30,6 @@ Player CriaJogador (char userName[TAMNOME], bool isBot);
 
 void createPlayers(bool isBot, Player *J1, Player *J2);
 
-
 miniB CriaTabuleiro();
 
 miniB *CriaTabuleiros();

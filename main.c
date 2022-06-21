@@ -39,6 +39,39 @@ pMove addLastLinkedList(pMove p, int tab, int y, int x) {
     return p;
 }
 
+//limpa nos lista ligada
+void freeLinkedList(pMove p) {
+    pMove aux;
+
+    while (p != NULL)
+    {
+        aux = p;
+        p = p->prox;
+        free(aux);
+    }
+}
+
+//free boards internos
+void freeBoards(miniB *boards){
+    for(int i = 0; i < 9; i++) {
+        for (int j = 0; j < 3; j++) {
+            free(boards[i].pos[j]);
+        }
+        free(boards[i].pos);
+    }
+    free(boards);
+}
+
+//free board externo
+void freeBoardExt(miniB board) {
+    for (int i = 0; i < 3; i++)
+        free(board.pos[i]);
+        for (int j = 0; j < 3; j++) {
+            free(board.pos[j]);
+        }
+        
+}
+
 //mostra lista ligada
 void showList(pMove p) {
     while (p != NULL) {
@@ -88,18 +121,6 @@ void showLastTab(pMove p, int *nVezes, int nRondas, int *oldTab, int *x, int *y)
     }
 }
 
-//limpa lista ligada
-void freeLinkedList(pMove p) {
-    pMove aux;
-
-    while (aux != NULL)
-    {
-        aux = p;
-        p = p->prox;
-        free(aux);
-    }
-}
-
 //cria um novo ficheiro através do nome dado pelo operador
 FILE *newFile(char Filename[TAMFILE]) {
     FILE * ficheiro = fopen(Filename, "w"); //abre ficheiro
@@ -125,6 +146,11 @@ void writeFileTXT(char Filename[TAMFILE], char jogador1[TAMNOME], char jogador2[
     int cont=0;
 
     ficheiro = fopen(Filename, "w");
+
+    if (ficheiro == NULL)
+    {
+        printf("Erro a abrir ficheiro");
+    }
 
     fprintf(ficheiro, "Ultimate Tic-Tac-Toe - Programaçã0 2021/2022\n");
     fprintf(ficheiro, "Tiago Figueiredo - a2020122664@isec.pt\n");
@@ -398,6 +424,7 @@ bool endGameExtern(miniB *tabuleiro) {
 
 //insere vitoria no tabuleiro externo
 void moveSetExt(miniB *tabuleiro, int rondas, int tab) {
+    //converte o tabuleiro em posicao
     int y=((tab)/3), x=((tab)%3);
 
     for (int linha = 0; linha < 3; linha++) {
@@ -472,7 +499,6 @@ void moveSet(miniB *tabuleiros, int rondas, int *tab, int x, int y) {
     }
 
     //novo tabuleiro
-
     (*tab) = y*3+x;
 }
 
@@ -533,7 +559,6 @@ void moveRequest(miniB *tabuleiros, miniB *tabuleiroEXT, int nRondas, int *atual
             break;
         } else {
             //se não for bot pede valores ao utilizador
-            printf("TABULEIRO EM JOGO: %d\n", *atualTab);
             showMenuMoveRepeat(&valorMenu, &y, &x);
         }
 
@@ -567,6 +592,7 @@ void moveRequest(miniB *tabuleiros, miniB *tabuleiroEXT, int nRondas, int *atual
                 
                 (*end) = true;
 
+                //verfica se quer gravar
                 if (valorMenuSave==1) {
                     (*save) = true;
                 } else {
@@ -581,7 +607,7 @@ void moveRequest(miniB *tabuleiros, miniB *tabuleiroEXT, int nRondas, int *atual
         
     } while (!request);
 
-    //atualiza ponteiros de x e y
+    //atualiza ponteiros de x e y para a seguir verificar se o tabuleiro seguinte é possivel
     (*xPos) = x;
     (*yPos) = y;
 }
@@ -595,7 +621,7 @@ void newGame(int selec) {
     char nomeFicheiro[TAMFILE];
     
     int continueGame=0, rondasResume=0, nRondas=0, oldRondas=0, tab=0, oldTab=0, winner=0, x=0, y=0, posResume=1, jogadas=0, viewOldMoves=0;
-    bool finished = false, tabulNext=false, end=false, save=false, viewM=false;
+    bool finished = false, tabulNext=false, tabulNextResume=false, end=false, save=false, viewM=false;
 
     if (selec == 1) {
         //newgame multiplayer
@@ -613,6 +639,7 @@ void newGame(int selec) {
         continueGame = showMenuResume();
         if (continueGame==1) {
 
+            //recebe na lista o ficheiro binario previamente criado e atualiza jogadores
             lista = recoverFromBinToList(&Jogador1, &Jogador2);
 
             // printf("Jogador 1: %s - %d\n", Jogador1.name, Jogador1.isBot);
@@ -620,10 +647,27 @@ void newGame(int selec) {
             // showList(lista);
 
             oldRondas = countMoves(lista);
+            //devolve a posição do ultimo x e y para sabermos o proximo tabuleiro
             showLastTab(lista, &posResume, oldRondas, &oldTab, &x, &y);
+            //converte o x,y para tabuleiro
             tab = y*3+x;
 
+            //verifica se tabuleiro anterior é possivel para jogar
+            do {
+                //se true está fechado, tem que mudar
+                //se false pode jogar
+                if (!checkTabPlay(&tabuleiroEXT, tab)) {
+                    tabulNextResume = true;
+                } else {
+                    tab = randomTab();
+                    tabulNextResume = false;
+                }
+            } while (!tabulNextResume);
+
+            //saber o nRondas do jogo anterior
             nRondas = countMoves(lista);
+
+            //fazer em lista auxiliar
 
             while (lista != NULL) {
                 moveSetResume(tabuleiros, rondasResume, lista->tab, lista->pos.x, lista->pos.y);
@@ -632,7 +676,7 @@ void newGame(int selec) {
                 lista = lista->prox;
             }
 
-            removeGameFile();
+            //removeGameFile();
         } else {
             printf("O jogo anterior será eliminado.\n");
             removeGameFile();
@@ -649,6 +693,7 @@ void newGame(int selec) {
         oldTab = tab;
         oldRondas = nRondas;
 
+        //pedidos de jogadas
         if(nRondas%2==0) {
             printRondas(nRondas, Jogador1.name);
             showBoards(tabuleiros, tabuleiroEXT, tab);
@@ -664,8 +709,10 @@ void newGame(int selec) {
             }
         }
 
+        //se acaba
         if (end) {
             if(save) {
+                //pergunta se quer guardar
                 saveListBin(lista, Jogador1, Jogador2);
                 //printFileBin();
             }
@@ -674,9 +721,7 @@ void newGame(int selec) {
 
         } else {
             if (viewM) {
-                //TF 
-                //está okay, apenas mostra é o menu 2x
-
+                //se é para verificar, pede jogadas a verificar e confirma se existem
                 jogadas = countMoves(lista);
                 viewOldMoves = showMenuHistory(jogadas);
 
@@ -688,7 +733,6 @@ void newGame(int selec) {
                 //verificação de jogadas
                 //add jogada link list
                 lista = addLastLinkedList(lista, oldTab, y, x);
-
 
                 if (endGame(tabuleiros, &tabuleiroEXT, nRondas, oldTab)) {
             
@@ -705,23 +749,25 @@ void newGame(int selec) {
                     }
 
                     printf("Qual vai ser o nome do ficheiro?\n> ");
-                    scanf("%s", nomeFicheiro);
-                    sprintf(nomeFicheiro, "%s.txt", nomeFicheiro);
+                    fgets(nomeFicheiro, sizeof(nomeFicheiro), stdin);
+                    nomeFicheiro[strlen(nomeFicheiro)-1] = '\0';
+
+                    strcat(nomeFicheiro, ".txt");
 
                     writeFileTXT(nomeFicheiro, Jogador1.name, Jogador2.name, lista);
 
                     finished = true;
 
                 } else if (checkDrawExt(tabuleiroEXT)) {
-                    //TF
-                    //testa empate
 
                     printf("Todos os tabuleiros preenchidos.\n");
                     printf("Jogo Empatado\n");
 
                     printf("Qual vai ser o nome do ficheiro?\n> ");
-                    scanf("%s", nomeFicheiro);
-                    sprintf(nomeFicheiro, "%s.txt", nomeFicheiro);
+                    fgets(nomeFicheiro, sizeof(nomeFicheiro), stdin);
+                    nomeFicheiro[strlen(nomeFicheiro)-1] = '\0';
+
+                    strcat(nomeFicheiro, ".txt");
 
                     writeFileTXT(nomeFicheiro, Jogador1.name, Jogador2.name, lista);
 
@@ -737,7 +783,6 @@ void newGame(int selec) {
                             tabulNext = true;
                         } else {
                             tab = randomTab();
-                            printf("Tabuleiro novo: %d\n", tab);
                             tabulNext = false;
                         }
                     } while (!tabulNext);
@@ -748,11 +793,13 @@ void newGame(int selec) {
 
     printf("\nFim do Jogo!\n");
 
-    exit(0);
+    freeBoards(tabuleiros);
+    freeBoardExt(tabuleiroEXT);
+    freeLinkedList(lista);
 
-    //TF
-    //limparMemoriaTab(tabuleiros);
-    //printf("\nMemoria limpa.");
+    //exit(0);
+
+    selec = 9;
 
 }
 

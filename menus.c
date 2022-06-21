@@ -192,7 +192,9 @@ int showMenuHistory(int jogadas) {
         if(num>jogadas)
             printf("Numero superior às rondas do jogo. Tente outra vez!\n");
 
-    } while (num>jogadas || num<=0);
+    //TF*
+    // } while (num>jogadas || num<=0);
+    } while (num>jogadas || num<=0 || num>10);
 
     return num;
 }

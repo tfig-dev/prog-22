@@ -1,0 +1,42 @@
+Ultimate Tic-Tac-Toe - Programaçã0 2021/2022
+Tiago Figueiredo - a2020122664@isec.pt
+
+Jogador 1: tiago | Jogador 2: MacBook
+ - Text Game FILE - 
+
+Ronda 1 | Jogador tiago | TAB: 5; (0, 0) 
+Ronda 2 | Jogador MacBook | TAB: 0; (1, 1) 
+Ronda 3 | Jogador tiago | TAB: 4; (1, 0) 
+Ronda 4 | Jogador MacBook | TAB: 3; (2, 2) 
+Ronda 5 | Jogador tiago | TAB: 8; (1, 2) 
+Ronda 6 | Jogador MacBook | TAB: 5; (2, 1) 
+Ronda 7 | Jogador tiago | TAB: 7; (1, 1) 
+Ronda 8 | Jogador MacBook | TAB: 4; (2, 0) 
+Ronda 9 | Jogador tiago | TAB: 6; (1, 1) 
+Ronda 10 | Jogador MacBook | TAB: 4; (1, 2) 
+Ronda 11 | Jogador tiago | TAB: 5; (1, 0) 
+Ronda 12 | Jogador MacBook | TAB: 3; (2, 0) 
+Ronda 13 | Jogador tiago | TAB: 8; (2, 2) 
+Ronda 14 | Jogador MacBook | TAB: 8; (2, 0) 
+Ronda 15 | Jogador tiago | TAB: 7; (0, 2) 
+Ronda 16 | Jogador MacBook | TAB: 2; (1, 1) 
+Ronda 17 | Jogador tiago | TAB: 4; (1, 1) 
+Ronda 18 | Jogador MacBook | TAB: 4; (0, 1) 
+Ronda 19 | Jogador tiago | TAB: 1; (0, 0) 
+Ronda 20 | Jogador MacBook | TAB: 0; (0, 1) 
+Ronda 21 | Jogador tiago | TAB: 1; (1, 1) 
+Ronda 22 | Jogador MacBook | TAB: 4; (0, 0) 
+Ronda 23 | Jogador tiago | TAB: 0; (2, 1) 
+Ronda 24 | Jogador MacBook | TAB: 7; (2, 0) 
+Ronda 25 | Jogador tiago | TAB: 7; (2, 2) 
+Ronda 26 | Jogador MacBook | TAB: 8; (2, 1) 
+Ronda 27 | Jogador tiago | TAB: 7; (1, 2) 
+Ronda 28 | Jogador MacBook | TAB: 1; (0, 2) 
+Ronda 29 | Jogador tiago | TAB: 2; (0, 0) 
+Ronda 30 | Jogador MacBook | TAB: 0; (0, 0) 
+Ronda 31 | Jogador tiago | TAB: 0; (2, 2) 
+Ronda 32 | Jogador MacBook | TAB: 8; (0, 1) 
+Ronda 33 | Jogador tiago | TAB: 1; (2, 0) 
+Ronda 34 | Jogador MacBook | TAB: 2; (2, 2) 
+Ronda 35 | Jogador tiago | TAB: 8; (0, 2) 
+ - END OF FILE - 
