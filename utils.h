@@ -7,4 +7,6 @@ void initRandom();
 //Devolve um valor inteiro aleatorio entre [a, b]
 int intUniformRnd(int a, int b);
 
+int randomTab();
+
 #endif /* UTILS_H */

@@ -7,407 +7,38 @@
 #include "game.h"
 #include "menus.h"
 #include "utils.h"
+#include "files.h"
+#include "tests.h"
 
-//funcao que adiciona nós à lista ligada
-pMove addLastLinkedList(pMove p, int tab, int y, int x) {
-    pMove aux, novo;
+//insere vitoria no tabuleiro externo
+void moveSetExt(miniB *tabuleiro, int rondas, int tab) {
+    //converte o tabuleiro em posicao
+    int y=((tab)/3), x=((tab)%3);
 
-    novo = malloc(sizeof(no));
-
-    if (novo == NULL) {
-        printf("Erro a alocar memória para a jogada.\n");
-        return p;
-    }
-
-    novo->tab = tab;
-    novo->pos.y = y;
-    novo->pos.x = x;
-
-    novo->prox = NULL;
-
-    if(p == NULL) {
-        p = novo;
-    } else {
-        aux = p;
-        while (aux->prox != NULL)
-        {
-            aux = aux->prox;
-        }
-        aux->prox = novo;
-    }
-
-    return p;
+    if(rondas%2==0) (*tabuleiro).pos[y][x] = 'X';
+    else (*tabuleiro).pos[y][x] = 'O';
 }
 
-//limpa nos lista ligada
-void freeLinkedList(pMove p) {
-    pMove aux;
-
-    while (p != NULL)
-    {
-        aux = p;
-        p = p->prox;
-        free(aux);
-    }
-}
-
-//free boards internos
-void freeBoards(miniB *boards){
-    for(int i = 0; i < 9; i++) {
-        for (int j = 0; j < 3; j++) {
-            free(boards[i].pos[j]);
-        }
-        free(boards[i].pos);
-    }
-    free(boards);
-}
-
-//free board externo
-void freeBoardExt(miniB board) {
-    for (int i = 0; i < 3; i++)
-        free(board.pos[i]);
-        for (int j = 0; j < 3; j++) {
-            free(board.pos[j]);
-        }
-        
-}
-
-//mostra lista ligada
-void showList(pMove p) {
-    while (p != NULL) {
-        printf("TAB: %d | (%d, %d) \n", p->tab, p->pos.y, p->pos.x);
-        p = p->prox;
-    }
-}
-
-//conta os nós existentes na lista ligada com recurso a uma função recursiva
-int countMoves(pMove p) {
-    if(p == NULL)
-        return 0;
-    else
-        return 1 + countMoves(p->prox); 
-}
-
-//funcao que mostra as ultimas jogadas pedidas pelo utilizador
-void showLastMoves(pMove p, int *nVezes, int nRondas) {
-    if(p == NULL)
-        return;
-    else {
-        showLastMoves(p->prox, nVezes, nRondas);
-        if((nRondas+(*nVezes))!=nRondas) {
-            if ((*nVezes)%2!=0)
-                printf("Jogador 1 - ");
-            else 
-                printf("Jogador 2 - ");
-
-            printf("TAB: %d | (%d, %d) \n", p->tab, p->pos.y, p->pos.x);
-            (*nVezes)--;   
-        }
-    }
-}
-
-//verifica qual foi o ultimo x e y para dar o seguinte tabuleiro a jogar
-void showLastTab(pMove p, int *nVezes, int nRondas, int *oldTab, int *x, int *y) {
-    if(p == NULL)
-        return;
-    else {
-        showLastTab(p->prox, nVezes, nRondas, oldTab, x, y);
-        if((nRondas+(*nVezes))!=nRondas) {
-            (*oldTab) = p->tab;
-            (*x) = p->pos.x;
-            (*y) = p->pos.y;
-            (*nVezes)--;   
-        }
-    }
-}
-
-//cria um novo ficheiro através do nome dado pelo operador
-FILE *newFile(char Filename[TAMFILE]) {
-    FILE * ficheiro = fopen(Filename, "w"); //abre ficheiro
-
-    if (ficheiro == NULL)
-    {
-        printf("Erro a abrir ficheiro");
-    }
-
-    return ficheiro;
-}
-
-//apaga binário do jogo
-void removeGameFile() {
-    if (remove("jogo.bin") == 0)
-        //se for igual a 0 é pq o ficheiro não existe
-        printf("Jogo anterior apagado.\n");
-}
-
-//cria ficheiro .txt
-void writeFileTXT(char Filename[TAMFILE], char jogador1[TAMNOME], char jogador2[TAMNOME], pMove p) {
-    FILE * ficheiro;
-    int cont=0;
-
-    ficheiro = fopen(Filename, "w");
-
-    if (ficheiro == NULL)
-    {
-        printf("Erro a abrir ficheiro");
-    }
-
-    fprintf(ficheiro, "Ultimate Tic-Tac-Toe - Programaçã0 2021/2022\n");
-    fprintf(ficheiro, "Tiago Figueiredo - a2020122664@isec.pt\n");
-    fprintf(ficheiro, "\n");
-    fprintf(ficheiro, "Jogador 1: %s | Jogador 2: %s\n", jogador1, jogador2);
-    fprintf(ficheiro, " - Text Game FILE - \n");
-
-    fprintf(ficheiro, "\n");
-
-    while(p != NULL) {
-        if (cont%2==0) {
-            fprintf(ficheiro, "Ronda %d | Jogador %s | TAB: %d; (%d, %d) \n", cont+1, jogador1, p->tab, p->pos.y, p->pos.x);
-        } else {
-            fprintf(ficheiro, "Ronda %d | Jogador %s | TAB: %d; (%d, %d) \n", cont+1, jogador2, p->tab, p->pos.y, p->pos.x);
-        }
-        p = p->prox;
-        cont++;
-    }
-
-    fprintf(ficheiro, " - END OF FILE - ");
-
-    fclose(ficheiro);
-}
-
-//verifica se existe um jogo já existente
-bool checkOldGame() {
-    FILE * resume;
-    resume = fopen("jogo.bin", "rb");
-
-    //se existir ficheiro, resume=1, fecha-o e devolve true
-    if (resume) {
-        fclose(resume);
-        return true;
-    } else {
-        return false;
-    }
-
-}
-
-//guarda binario do jogo
-void saveListBin(pMove p, Player joga1, Player joga2){
-    FILE * ficheiro;
-    
-    ficheiro = fopen("jogo.bin", "wb");
-
-    if(ficheiro == NULL){
-        printf("Erro a guardar ficheiro.\n");
-        return;
-    }
-
-    fwrite(&joga1, sizeof(Player), 1, ficheiro);
-    fwrite(&joga2, sizeof(Player), 1, ficheiro);
-
-    while (p != NULL)
-    {
-        fwrite(p, sizeof(no), 1, ficheiro);
-        p = p->prox;
-    }
-
-    fclose(ficheiro);
-}
-
-//imprime binario do jogo
-void printFileBin() {
-    no p;
-    FILE * ficheiro;
-    Player joga1, joga2;
-    
-    ficheiro = fopen("jogo.bin", "rb");
-    if (ficheiro == NULL)
-    {
-        printf("ERRO no acesso ao ficheiro\n");
-        return;
-    }
-    
-    fread(&joga1, sizeof(Player), 1, ficheiro);
-    printf("Jogador 1: %s - %d\n", joga1.name, joga1.isBot);
-    fread(&joga2, sizeof(Player), 1, ficheiro);
-    printf("Jogador 2: %s - %d\n", joga2.name, joga2.isBot);
-
-    while (fread(&p, sizeof(no), 1, ficheiro) == 1) {
-        printf("TAB: %d | (%d, %d) \n", p.tab, p.pos.y, p.pos.x);
-    }
- 
-    fclose(ficheiro);
-}
-
-//recebe binario para o jogo
-pMove recoverFromBinToList(Player *Joga1, Player *Joga2) {
-    Player J1, J2;
-    FILE * ficheiro = NULL;
-    pMove list = NULL;
-    pMove aux = NULL;
-    no changed;
-
-    ficheiro = fopen("jogo.bin", "rb");
-
-    if(ficheiro == NULL){
-        printf("Erro a abrir ficheiro.\n");
-        return NULL;
-    }
-
-    fread(&J1, sizeof(Player), 1, ficheiro);
-    fread(&J2, sizeof(Player), 1, ficheiro);
-
-    //guarda jogador 1 no ponteiro
-    strcpy(Joga1->name, J1.name);
-    Joga1->isBot = J1.isBot;
-
-    //guarda jogador 2 no ponteiro
-    strcpy(Joga2->name, J2.name);
-    Joga2->isBot = J2.isBot;
-
-    while(fread(&changed, sizeof(no), 1, ficheiro)) {
-        list = addLastLinkedList(list, changed.tab, changed.pos.y, changed.pos.x);
-
-    }
-
-    fclose(ficheiro);
-
-    return list;
-}
-
-//devolve tabuleiro random
-int randomTab() {
-    int tabN;
-
-    tabN = intUniformRnd(0,8);
-
-    return tabN;
-}
-
-//verificações linhas, colunas, diagonais
-bool checkTabPlay(miniB *tabuleiro, int tab) {
-    //verifica se o tabuleiro está fechado
+//insere empate no tabuleiro externo
+void moveSetDraw(miniB *tabuleiro, int tab) {
     int y=(tab/3), x=(tab%3);
 
-    if ((*tabuleiro).pos[y][x] != '_') {
-        return true;
-    } else {
-        return false;
-    }
+    (*tabuleiro).pos[y][x] = '.';
 }
 
-bool checkLine(miniB *tabuleiros, int tab) {
-    for (int linha = 0; linha < 3; linha++) {
-        if (tabuleiros[tab].pos[linha][0] != '_') {
-            if (tabuleiros[tab].pos[linha][0]==tabuleiros[tab].pos[linha][1] && tabuleiros[tab].pos[linha][1]==tabuleiros[tab].pos[linha][2]) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+//insere jogada nos tabuleiros
+void moveSet(miniB *tabuleiros, int rondas, int *tab, int x, int y) {
+    if(rondas%2==0) tabuleiros[(*tab)].pos[y][x] = 'X';
+    else tabuleiros[(*tab)].pos[y][x] = 'O';
+    //novo tabuleiro
+    (*tab) = y*3+x;
 }
 
-bool checkExternLine(miniB *tabuleiro) {
-    for (int i = 0; i < 3; i++) {
-        if ((*tabuleiro).pos[i][0] != '_') {
-            if ((*tabuleiro).pos[i][0]==(*tabuleiro).pos[i][1] && (*tabuleiro).pos[i][1]==(*tabuleiro).pos[i][2]) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+//insere jogadas do jogo que vem de fora diferente do original porque não mudamos de tabuleiro
+void moveSetResume(miniB *tabuleiros, int rondas, int tab, int x, int y) {
+    if(rondas%2==0) tabuleiros[tab].pos[y][x] = 'X';
+    else tabuleiros[tab].pos[y][x] = 'O';
 }
-
-bool checkColumn(miniB *tabuleiros, int tab) {
-    for (int coluna = 0; coluna < 3; coluna++) {
-        if (tabuleiros[tab].pos[0][coluna] != '_') {
-            if (tabuleiros[tab].pos[0][coluna]==tabuleiros[tab].pos[1][coluna] && tabuleiros[tab].pos[1][coluna]==tabuleiros[tab].pos[2][coluna]) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool checkExternColumn(miniB *tabuleiro) {
-    for (int i = 0; i < 3; i++) {
-        if ((*tabuleiro).pos[0][i] != '_') {
-            if ((*tabuleiro).pos[0][i]==(*tabuleiro).pos[1][i] && (*tabuleiro).pos[1][i]==(*tabuleiro).pos[2][i]) {
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
-bool checkDiagonal(miniB *tabuleiros, int tab) {
-    //diagonal cima esquerda -> baixo direita
-    if (tabuleiros[tab].pos[0][0] != '_') {
-        if (tabuleiros[tab].pos[0][0] == tabuleiros[tab].pos[1][1] && tabuleiros[tab].pos[1][1] == tabuleiros[tab].pos[2][2]) {
-            return true;
-        }
-    }
-
-    //diagonal baixo esquerda -> cima direita
-    if (tabuleiros[tab].pos[2][0] != '_') {
-        if (tabuleiros[tab].pos[2][0] == tabuleiros[tab].pos[1][1] && tabuleiros[tab].pos[1][1] == tabuleiros[tab].pos[0][2]) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool checkExternDiagonal(miniB *tabuleiro) {
-    //diagonal cima esquerda -> baixo direita
-    if ((*tabuleiro).pos[0][0] != '_') {
-        if ((*tabuleiro).pos[0][0] == (*tabuleiro).pos[1][1] && (*tabuleiro).pos[1][1] == (*tabuleiro).pos[2][2]) {
-            return true;
-        }
-    }
-
-    //diagonal baxio esquerda -> cima direita
-    if ((*tabuleiro).pos[2][0] != '_') {
-        if ((*tabuleiro).pos[2][0] == (*tabuleiro).pos[1][1] && (*tabuleiro).pos[1][1] == (*tabuleiro).pos[0][2]) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool checkDraw(miniB *tabuleiros, int tab) {
-    bool checkInt = true;
-
-    for (int linha = 0; linha < 3; linha++) {
-        for (int coluna = 0; coluna < 3; coluna++) {
-            if (tabuleiros[tab].pos[linha][coluna] == '_')
-            {
-                return checkInt = false;   
-            }  
-        }
-    }
-    
-    return checkInt;
-}
-
-bool checkDrawExt(miniB tabuleiro) {
-    bool checkExt = true;
-
-    for (int linha = 0; linha < 3; linha++) {
-        for (int coluna = 0; coluna < 3; coluna++) {
-            if (tabuleiro.pos[linha][coluna] == '_')
-            {
-                return checkExt = false;
-            }
-        }
-    }
-
-    return checkExt;   
-}
-//fim verificações linhas, colunas, diagonais
 
 //verifica se ganhou o tabuleiro externo
 bool endGameExtern(miniB *tabuleiro) {
@@ -422,44 +53,11 @@ bool endGameExtern(miniB *tabuleiro) {
     return false;
 }
 
-//insere vitoria no tabuleiro externo
-void moveSetExt(miniB *tabuleiro, int rondas, int tab) {
-    //converte o tabuleiro em posicao
-    int y=((tab)/3), x=((tab)%3);
-
-    for (int linha = 0; linha < 3; linha++) {
-        for (int coluna = 0; coluna < 3; coluna++) {
-            if (x==coluna && y==linha) {
-                if(rondas%2==0) {
-                    (*tabuleiro).pos[y][x] = 'X';
-                } else {
-                    (*tabuleiro).pos[y][x] = 'O';
-                }
-            }
-        } 
-    }
-}
-
-//insere empate no tabuleiro externo
-void moveSetDraw(miniB *tabuleiro, int tab) {
-    int y=(tab/3), x=(tab%3);
-
-    for (int linha = 0; linha < 3; linha++) {
-        for (int coluna = 0; coluna < 3; coluna++) {
-            if (x==coluna && y==linha) {
-                (*tabuleiro).pos[y][x] = '.';
-            }
-        } 
-    }
-}
-
 //verificacoes de vitora e final de jogo
 bool endGame(miniB *tabuleiros, miniB *tabuleiroEXT, int rondas, int tab) {
     bool controlTable=false;
 
-    if (rondas==0) {
-        return false;
-    }
+    if (rondas==0) return false;
 
     if(checkLine(tabuleiros, tab)) controlTable = true;
 
@@ -472,50 +70,14 @@ bool endGame(miniB *tabuleiros, miniB *tabuleiroEXT, int rondas, int tab) {
         //adiciona vitoria no tabuleiro externo
         moveSetExt(tabuleiroEXT, rondas, tab);
         //verifica se há vitoria no tabuleiro externo
-        if (endGameExtern(tabuleiroEXT)) 
-            return true;
+        if (endGameExtern(tabuleiroEXT)) return true;
     } else {
     //se não existe vitoria nos tabuleiros internos
     //verifica empate, se sim, coloca carater de empate
-        if(checkDraw(tabuleiros, tab)) 
-            moveSetDraw(tabuleiroEXT, tab);
+        if(checkDraw(tabuleiros, tab)) moveSetDraw(tabuleiroEXT, tab);
     }
 
     return false;
-}
-
-//insere jogada nos tabuleiros
-void moveSet(miniB *tabuleiros, int rondas, int *tab, int x, int y) {
-    for (int linha = 0; linha < 3; linha++) {
-        for (int coluna = 0; coluna < 3; coluna++) {
-            if (x==coluna && y==linha) {
-                if(rondas%2==0) {
-                    tabuleiros[(*tab)].pos[y][x] = 'X';
-                } else {
-                    tabuleiros[(*tab)].pos[y][x] = 'O';
-                }
-            }
-        } 
-    }
-
-    //novo tabuleiro
-    (*tab) = y*3+x;
-}
-
-//insere jogadas do jogo que vem de fora
-//diferente do original porque não mudamos de tabuleiro
-void moveSetResume(miniB *tabuleiros, int rondas, int tab, int x, int y) {
-    for (int linha = 0; linha < 3; linha++) {
-        for (int coluna = 0; coluna < 3; coluna++) {
-            if (x==coluna && y==linha) {
-                if(rondas%2==0) {
-                    tabuleiros[tab].pos[y][x] = 'X';
-                } else {
-                    tabuleiros[tab].pos[y][x] = 'O';
-                }
-            }
-        } 
-    }
 }
 
 //verifica se jogada a inserir é possivel
@@ -612,8 +174,28 @@ void moveRequest(miniB *tabuleiros, miniB *tabuleiroEXT, int nRondas, int *atual
     (*yPos) = y;
 }
 
+//le lista ligada para colocar jogadas no tabuleiro
+void readLinkedList(miniB *tabuleiros, miniB tabuleiroEXT, pMove p) {
+    pMove aux;
+    int rondasResume=0;
+
+    if(p == NULL) {
+        printf("Erro na lista ligada!\n");
+    } else {
+        aux = p;
+        while (aux != NULL)
+        {
+            moveSetResume(tabuleiros, rondasResume, aux->tab, aux->pos.x, aux->pos.y);
+            showBoards(tabuleiros, tabuleiroEXT, aux->tab);
+            endGame(tabuleiros, &tabuleiroEXT, rondasResume, aux->tab);
+            rondasResume++;
+            aux = aux->prox;
+        }   
+    }
+}
+
 //inicia jogo
-void newGame(int selec) {
+int newGame(int selec) {
     Player Jogador1, Jogador2;
     miniB *tabuleiros = CriaTabuleiros();
     miniB tabuleiroEXT = CriaTabuleiro();
@@ -642,13 +224,9 @@ void newGame(int selec) {
             //recebe na lista o ficheiro binario previamente criado e atualiza jogadores
             lista = recoverFromBinToList(&Jogador1, &Jogador2);
 
-            // printf("Jogador 1: %s - %d\n", Jogador1.name, Jogador1.isBot);
-            // printf("Jogador 2: %s - %d\n", Jogador2.name, Jogador2.isBot);
-            // showList(lista);
-
-            oldRondas = countMoves(lista);
+            nRondas = countMoves(lista);
             //devolve a posição do ultimo x e y para sabermos o proximo tabuleiro
-            showLastTab(lista, &posResume, oldRondas, &oldTab, &x, &y);
+            showLastTab(lista, &posResume, nRondas, &oldTab, &x, &y);
             //converte o x,y para tabuleiro
             tab = y*3+x;
 
@@ -664,19 +242,9 @@ void newGame(int selec) {
                 }
             } while (!tabulNextResume);
 
-            //saber o nRondas do jogo anterior
-            nRondas = countMoves(lista);
+            readLinkedList(tabuleiros, tabuleiroEXT, lista);
+            removeGameFile();
 
-            //fazer em lista auxiliar
-
-            while (lista != NULL) {
-                moveSetResume(tabuleiros, rondasResume, lista->tab, lista->pos.x, lista->pos.y);
-                endGame(tabuleiros, &tabuleiroEXT, rondasResume, lista->tab);
-                rondasResume++;
-                lista = lista->prox;
-            }
-
-            //removeGameFile();
         } else {
             printf("O jogo anterior será eliminado.\n");
             removeGameFile();
@@ -714,7 +282,6 @@ void newGame(int selec) {
             if(save) {
                 //pergunta se quer guardar
                 saveListBin(lista, Jogador1, Jogador2);
-                //printFileBin();
             }
 
             finished = true;
@@ -791,18 +358,14 @@ void newGame(int selec) {
         }
     } while (!finished);
 
-    printf("\nFim do Jogo!\n");
-
     freeBoards(tabuleiros);
     freeBoardExt(tabuleiroEXT);
     freeLinkedList(lista);
 
-    //exit(0);
-
-    selec = 9;
-
+    return 9;
 }
 
+//main
 int main() {
     int selec = 0;
 
@@ -810,9 +373,11 @@ int main() {
         //verifica se tem ficheiro através da bool resume
         selec = showMenu(checkOldGame());
 
-        if (selec!=9) newGame(selec);
+        if (selec!=9) selec = newGame(selec);
 
     } while (selec != 9);
+
+    printf("END\n");
 
     return 0;
 }
