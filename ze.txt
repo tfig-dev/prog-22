@@ -1,8 +1,0 @@
-Ultimate Tic-Tac-Toe - Programaçã0 2021/2022
-Tiago Figueiredo - a2020122664@isec.pt
-
-Jogador 1: tiago | Jogador 2: MacBook
- - Text Game FILE - 
-
-Ronda 1 | Jogador tiago | TAB: 1; (0, 0) 
- - END OF FILE - 
